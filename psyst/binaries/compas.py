@@ -3,11 +3,14 @@ COMPAS code
 """
 
 from pathlib import Path
+import sqlite3
 from typing import Union
 
 import numpy as np
+import pandas as pd
 
 from psyst.io import logger
+
 
 class COMPASdb(object):
     """Class to access COMPAS database
@@ -57,56 +60,32 @@ class COMPASdb(object):
         self.database = self._load_database_()
 
     def _load_database_(
-            self,
-    ) -> None:
+        self,
+    ) -> dict:
+        """Load COMPAS database into memory"""
 
         logger.info("load COMPAS database with keyword mappings")
 
-        header = dict()
-        data = dict()
+        conn = sqlite3.connect(self.database_name)
+        c = conn.cursor()
 
-        # mapping keywords
-        keywords_map = {
-            "Mass@ZAMS(1)": "m1i",
-            "Mass@ZAMS(2)": "m2i",
-            "Eccentricity@ZAMS": "ei",
-            "SemiMajorAxis@ZAMS": "ai",
-            "Age(SN)": "age_pre_cc",
-            "Mass_CO_Core@CO(SN)": "c_core_mass_pre_cc",
-            "Eccentricity<SN": "e_pre_cc",
-            "SemiMajorAxis<SN": "a_pre_cc",
-            "Orb_Velocity<SN": "v_orb_pre_cc",
-            "Drawn_Kick_Magnitude(SN)": "w_kick",
-            "Applied_Kick_Magnitude(SN)": "w_kick_applied",
-            "SN_Kick_Theta(SN)": "theta_kick",
-            "SN_Kick_Phi(SN)": "phi_kick",
-            "Fallback_Fraction(SN)": "f_fb",
-            "Supernova_State": "sn_state",
-            "Mass(SN)": "remnant_mass",
-            "Mass(CP)": "companion_mass",
-            "Stellar_Type(CP)": "companion_stellar_type",
-            "SemiMajorAxis": "a_pm",
-            "Eccentricity": "e_pm",
-        }
+        return c
 
-        # open file
-        f = open(self.database_name, "r")
+    def save_to_sql(self, name: str = "") -> None:
+        """Save COMPAS database as an SQLite file"""
 
-        # first two rows are not used
-        f.readline()
-        f.readline()
+        conn = sqlite3.connect(name)
 
-        # column names
-        tmp = f.readline().strip().split()
-        column_names = [keywords_map[name] for name in tmp]
+        try:
+            self.database.to_sql("COMPASrun", conn)
 
-        # will re-open it later
-        f.close()
+        except ValueError:
+            logger.error(
+                "SQLite table `COMPASrun` already exists. will not create a new one"
+            )
 
-        # now load it again with numpy and assign column_names to columns of fdata
-        fdata = np.loadtxt(self.database_name, skiprows=3, unpack=True)
+    def show_database(self) -> None:
+        """Print database to standard output"""
 
-        for k, name in enumerate(column_names):
-            data[name] = np.array(fdata[k])
-
-        return data
+        self.database.execute("SELECT * FROM COMPASrun;")
+        print(self.database.fetchall())
