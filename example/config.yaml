@@ -1,0 +1,16 @@
+# configuration file for psyst
+
+# population synthesis output
+pop_synth_database: "example/compas.db"
+
+# flag to check if we want to store COMPAS database as a SQLite file
+save_pop_synth_database_as_sql: False
+pop_synth_database_sql_name: "compas.db"
+
+# database with summary of MESA models created with the stevdb code
+mesa_database: "example/fake.db"
+
+# interpolation method to use in the matchmaking process
+interpolation_method: "nearest_neighbour"
+
+interpolated_results_name: "nearest_neighbours.db"
