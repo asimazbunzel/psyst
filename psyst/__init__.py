@@ -8,6 +8,7 @@ import sys
 
 from psyst.base import Loader
 from psyst.io import logger, LOG_FILENAME
+from psyst.matchmaking import MatchMaker
 
 __version__ = "0.0.1"
 
@@ -31,8 +32,39 @@ def start():
     logger.info("start matchmaking manager")
 
     # if only want to print database name and exit
-    if True:
+    if core.args.show_log_fname:
         print(f"LOG FILENAME is: `{LOG_FILENAME}`")
+        sys.exit(0)
+
+    # load database of COMPAS
+    core.load_compas_database()
+
+    # try to save COMPAS database into an SQLite file
+    if core.config.get("save_pop_synth_database_as_sql"):
+        core.compasdb.save_to_sql(name=core.config.get("pop_synth_database_sql_name"))
+
+    # load database of MESA
+    core.load_mesa_database()
+
+    # check if database of MESA and COMPAS will be printed out
+    if core.args.show_mesa_database:
+        core.mesadb.show_database()
+
+    if core.args.show_compas_database:
+        core.compasdb.show_database()
+
+    if core.args.show_mesa_database or core.args.show_compas_database:
+        sys.exit(0)
+
+    # matchmaking process
+    matchmaker = MatchMaker(
+        compas_database=core.compasdb.database,
+        mesa_database=core.mesadb.database,
+        interpolation_method=core.config.get("interpolation_method"),
+        interpolated_results_name=core.config.get("interpolated_results_name"),
+    )
+
+    matchmaker.do_matchmake()
 
     return
 
