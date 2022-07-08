@@ -1,5 +1,11 @@
 """Base module that handles the input of arguments as well as the classes for each part of the
 matchmaking process
+
+
+SQLite to make comparison should be something like this:
+
+    SELECT *,ABS(m1i-20)*ABS(m1i-20) + ABS(m2i-10)*ABS(m2i-10) + ABS(porbi - 3)*ABS(porbi -3) + ABS(ei - 0.45)*ABS(ei - 0.45) FROM MESArun ORDER BY ABS(m1i-20)*ABS(m1i-20) + ABS(m2i-10)*ABS(m2i-10) + ABS(porbi - 3)*ABS(porbi -3) + ABS(ei - 0.45)*ABS(ei - 0.45) DESC;
+
 """
 
 import argparse
@@ -8,6 +14,7 @@ from pathlib import Path
 import pprint
 import sys
 
+from psyst.binaries import COMPASdb, MESAdb
 from psyst.io import load_yaml, logger
 
 
@@ -79,6 +86,22 @@ class Loader(object):
             help="display log filename in standard output and exit",
         )
 
+        parser.add_argument(
+            "--show-compas-database",
+            action="store_true",
+            default=False,
+            dest="show_compas_database",
+            help="display COMPAS database in standard output and exit",
+        )
+
+        parser.add_argument(
+            "--show-mesa-database",
+            action="store_true",
+            default=False,
+            dest="show_mesa_database",
+            help="display MESA database in standard output and exit",
+        )
+
         return parser
 
     def parse_args(self) -> argparse.Namespace:
@@ -110,3 +133,55 @@ class Loader(object):
             sys.exit(1)
 
         return load_yaml(self.args.config_fname)
+
+    def load_compas_database(self) -> None:
+        """Load COMPAS database of a stellar population"""
+
+        logger.info("load COMPAS database from file")
+
+        # short name for COMPAS db
+        db_name = self.config.get("pop_synth_database")
+
+        if isinstance(db_name, str):
+            if len(db_name) == 0:
+                logger.critical(
+                    "empty name of `pop_synth_database` option in configuration file"
+                )
+                sys.exit(1)
+
+            else:
+                db_name = Path(db_name)
+
+        # sanity check
+        if not db_name.exists():
+            logger.critical(f"no such file found: `{db_name}`")
+            sys.exit(1)
+
+        # now we can load COMPAS database
+        self.compasdb = COMPASdb(database_name=db_name)
+
+    def load_mesa_database(self) -> None:
+        """Load MESA database of a stellar population"""
+
+        logger.info("load MESA database from file")
+
+        # short name for MESA db
+        db_name = self.config.get("mesa_database")
+
+        if isinstance(db_name, str):
+            if len(db_name) == 0:
+                logger.critical(
+                    "empty name of `mesa_database` option in configuration file"
+                )
+                sys.exit(1)
+
+            else:
+                db_name = Path(db_name)
+
+        # sanity check
+        if not db_name.exists():
+            logger.critical(f"no such file found: `{db_name}`")
+            sys.exit(1)
+
+        # now we can load COMPAS database
+        self.mesadb = MESAdb(database_name=db_name)
