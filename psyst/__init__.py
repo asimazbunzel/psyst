@@ -60,6 +60,7 @@ def start():
     matchmaker = MatchMaker(
         compas_database=core.compasdb.database,
         mesa_database=core.mesadb.database,
+        mesa_grid_name=core.config.get("mesa_grid_name"),
         interpolation_method=core.config.get("interpolation_method"),
         interpolated_results_name=core.config.get("interpolated_results_name"),
     )

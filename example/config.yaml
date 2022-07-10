@@ -10,7 +10,10 @@ pop_synth_database_sql_name: "compas.db"
 # database with summary of MESA models created with the stevdb code
 mesa_database: "example/fake.db"
 
-# interpolation method to use in the matchmaking process
-interpolation_method: "nearest_neighbour"
+# regular grid of MESA models
+mesa_grid_name: "example/complete-grid.yaml"
 
-interpolated_results_name: "nearest_neighbours.db"
+# interpolation method to use in the matchmaking process
+interpolation_method: "weighted_neighbours"
+
+interpolated_results_name: "weighted_neighbours.db"
